@@ -1,0 +1,454 @@
+<div class="min-h-screen flex flex-col bg-slate-950 text-slate-100 font-sans selection:bg-emerald-500 selection:text-slate-900">
+  <!-- Top Navigation Header -->
+  <header class="h-16 border-b border-slate-800 bg-slate-900/80 backdrop-blur-md px-6 flex items-center justify-between sticky top-0 z-30">
+    <div class="flex items-center space-x-3">
+      <!-- Premium Logo -->
+      <div class="h-10 w-10 rounded-xl bg-gradient-to-tr from-emerald-400 to-blue-500 flex items-center justify-center shadow-lg shadow-emerald-500/10">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-900" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+      </div>
+      <div>
+        <span class="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">GeoVal</span>
+        <span class="text-xs ml-2 text-emerald-400 font-semibold px-2 py-0.5 bg-emerald-500/10 rounded-full border border-emerald-500/20">Bagré Aval</span>
+      </div>
+    </div>
+
+    <!-- Mode and Roles Switching -->
+    <div class="flex items-center space-x-4">
+      <div class="flex bg-slate-800/80 p-1 rounded-lg border border-slate-700">
+        <button (click)="activeTab.set('map')" [class.bg-emerald-500]="activeTab() === 'map'" [class.text-slate-950]="activeTab() === 'map'" class="px-4 py-1.5 rounded-md text-xs font-semibold transition-all">Carte Interactive</button>
+        <button (click)="activeTab.set('dashboard')" [class.bg-emerald-500]="activeTab() === 'dashboard'" [class.text-slate-950]="activeTab() === 'dashboard'" class="px-4 py-1.5 rounded-md text-xs font-semibold transition-all">Analyses & Graphiques</button>
+        <button *ngIf="currentRole() === 'admin' || currentRole() === 'analyste'" (click)="activeTab.set('admin')" [class.bg-emerald-500]="activeTab() === 'admin'" [class.text-slate-950]="activeTab() === 'admin'" class="px-4 py-1.5 rounded-md text-xs font-semibold transition-all">Console Météo</button>
+      </div>
+
+      <!-- Quick Role Toggle for Evaluation -->
+      <div class="h-6 w-px bg-slate-800"></div>
+      <div class="flex items-center space-x-1">
+        <span class="text-xs text-slate-400 mr-1">Rôle :</span>
+        <button (click)="setRole('chercheur')" [class.bg-slate-700]="currentRole() === 'chercheur'" class="px-2 py-1 rounded text-xs transition">Lecteur</button>
+        <button (click)="setRole('analyste')" [class.bg-teal-500]="currentRole() === 'analyste'" [class.text-slate-950]="currentRole() === 'analyste'" class="px-2 py-1 rounded text-xs transition">Analyste</button>
+        <button (click)="setRole('admin')" [class.bg-purple-500]="currentRole() === 'admin'" [class.text-slate-950]="currentRole() === 'admin'" class="px-2 py-1 rounded text-xs transition font-semibold">Admin</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 flex overflow-hidden">
+    <!-- Left Sidebar: Parcelles Management -->
+    <aside class="w-80 border-r border-slate-800 bg-slate-900/50 flex flex-col z-20">
+      <!-- Search & Import Section -->
+      <div class="p-4 border-b border-slate-800 space-y-3">
+        <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Exploration</h3>
+        <div class="relative">
+          <input type="text" placeholder="Rechercher une parcelle..." class="w-full bg-slate-950 border border-slate-800 rounded-lg py-2 pl-9 pr-4 text-sm focus:outline-none focus:border-emerald-500 transition-colors">
+          <svg class="absolute left-3 top-2.5 h-4 w-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+
+        <!-- Buttons based on role -->
+        <div class="grid grid-cols-2 gap-2" *ngIf="currentRole() !== 'chercheur'">
+          <button (click)="startDrawingParcel()" [disabled]="isDrawing()" class="flex items-center justify-center space-x-1 py-2 px-3 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 rounded-lg text-xs font-semibold transition-all">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+            </svg>
+            <span>Tracer</span>
+          </button>
+          <button (click)="showImportModal.set(true)" class="flex items-center justify-center space-x-1 py-2 px-3 bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 rounded-lg text-xs font-semibold transition-all">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+            </svg>
+            <span>Importer</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- List of Parcelles -->
+      <div class="flex-1 overflow-y-auto p-4 space-y-2">
+        <div class="flex items-center justify-between text-xs font-semibold text-slate-400 uppercase tracking-wider pb-2">
+          <span>Parcelles Agricoles</span>
+          <span class="px-2 py-0.5 bg-slate-800 rounded-full text-[10px]">{{ parcelles().length }}</span>
+        </div>
+
+        <div *ngFor="let p of parcelles()" 
+             (click)="selectParcelleById(p.id)"
+             [class.border-emerald-500]="selectedParcelle()?.id === p.id"
+             [class.bg-slate-800/50]="selectedParcelle()?.id === p.id"
+             class="p-3 bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-xl cursor-pointer transition-all flex justify-between items-start">
+          <div class="space-y-1">
+            <h4 class="font-medium text-sm text-slate-200">{{ p.name }}</h4>
+            <p class="text-xs text-slate-400 flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-slate-500 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              {{ p.owner || 'Exploitant inconnu' }}
+            </p>
+          </div>
+          <span [class.bg-emerald-500/10]="p.crop_type === 'Riz'" [class.text-emerald-400]="p.crop_type === 'Riz'"
+                [class.bg-amber-500/10]="p.crop_type !== 'Riz'" [class.text-amber-400]="p.crop_type !== 'Riz'"
+                class="px-2 py-1 rounded text-[10px] font-semibold uppercase tracking-wider">
+            {{ p.crop_type }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Export Global Reports -->
+      <div class="p-4 border-t border-slate-800 bg-slate-900/80 space-y-2">
+        <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Rapports & Exports</h4>
+        <div class="grid grid-cols-2 gap-2">
+          <button (click)="downloadExcel()" class="py-2 px-3 bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 rounded-lg text-xs font-semibold transition border border-emerald-500/30">Excel (.csv)</button>
+          <button (click)="printPdf()" class="py-2 px-3 bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 rounded-lg text-xs font-semibold transition border border-blue-500/30">Imprimer (PDF)</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Central Workspace -->
+    <div class="flex-1 flex flex-col relative bg-slate-950">
+      
+      <!-- Interactive Map Tab -->
+      <div [class.hidden]="activeTab() !== 'map'" class="flex-1 flex relative">
+        <div id="map-container" class="absolute inset-0 z-10"></div>
+        
+        <!-- Spatial details layer indicator -->
+        <div class="absolute bottom-6 left-6 z-20 bg-slate-900/90 border border-slate-800 backdrop-blur px-4 py-3 rounded-xl text-xs space-y-2 shadow-2xl">
+          <h4 class="font-bold text-slate-200">Légende des parcelles</h4>
+          <div class="flex items-center space-x-2">
+            <span class="h-3.5 w-3.5 rounded bg-emerald-500 block"></span>
+            <span>Riziculture (Vigueur élevée)</span>
+          </div>
+          <div class="flex items-center space-x-2">
+            <span class="h-3.5 w-3.5 rounded bg-amber-500 block"></span>
+            <span>Cultures maraîchères (Vigueur modérée)</span>
+          </div>
+        </div>
+
+        <div *ngIf="isDrawing()" class="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 bg-rose-500 text-slate-950 font-bold px-4 py-2 rounded-lg text-xs shadow-lg flex items-center space-x-2">
+          <span class="h-2 w-2 rounded-full bg-slate-950 animate-ping"></span>
+          <span>Saisie géographique active sur la carte</span>
+        </div>
+      </div>
+
+      <!-- Dashboard Statistics Tab -->
+      <div [class.hidden]="activeTab() !== 'dashboard'" class="flex-1 overflow-y-auto p-8 space-y-8 z-10">
+        <!-- Global KPIs Cards -->
+        <div class="grid grid-cols-4 gap-6">
+          <div class="glass-panel p-6 rounded-2xl border border-slate-800 relative overflow-hidden">
+            <div class="space-y-1">
+              <span class="text-xs text-slate-400 font-medium">Total Parcelles</span>
+              <p class="text-3xl font-extrabold">{{ parcelles().length }}</p>
+            </div>
+            <div class="absolute -right-4 -bottom-4 h-16 w-16 bg-blue-500/10 rounded-full filter blur-xl"></div>
+          </div>
+          <div class="glass-panel p-6 rounded-2xl border border-slate-800 relative overflow-hidden">
+            <div class="space-y-1">
+              <span class="text-xs text-slate-400 font-medium">Rendement Moyen</span>
+              <p class="text-3xl font-extrabold text-emerald-400">5.0 t/ha</p>
+            </div>
+            <div class="absolute -right-4 -bottom-4 h-16 w-16 bg-emerald-500/10 rounded-full filter blur-xl"></div>
+          </div>
+          <div class="glass-panel p-6 rounded-2xl border border-slate-800 relative overflow-hidden">
+            <div class="space-y-1">
+              <span class="text-xs text-slate-400 font-medium">NDVI Moyen Récent</span>
+              <p class="text-3xl font-extrabold text-teal-400">0.59</p>
+            </div>
+            <div class="absolute -right-4 -bottom-4 h-16 w-16 bg-teal-500/10 rounded-full filter blur-xl"></div>
+          </div>
+          <div class="glass-panel p-6 rounded-2xl border border-slate-800 relative overflow-hidden">
+            <div class="space-y-1">
+              <span class="text-xs text-slate-400 font-medium">Productivité de l'eau</span>
+              <p class="text-3xl font-extrabold text-blue-400">1.28 kg/m³</p>
+            </div>
+            <div class="absolute -right-4 -bottom-4 h-16 w-16 bg-purple-500/10 rounded-full filter blur-xl"></div>
+          </div>
+        </div>
+
+        <!-- Geographic Charts -->
+        <div class="grid grid-cols-2 gap-6">
+          <div class="glass-panel p-6 rounded-2xl border border-slate-800">
+            <h4 class="text-sm font-semibold text-slate-300 mb-4">Classement des cultures par superficie</h4>
+            <div class="space-y-3">
+              <div>
+                <div class="flex justify-between text-xs text-slate-400 mb-1">
+                  <span>Riz</span>
+                  <span>75% du périmètre</span>
+                </div>
+                <div class="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
+                  <div class="h-full bg-emerald-500" style="width: 75%"></div>
+                </div>
+              </div>
+              <div>
+                <div class="flex justify-between text-xs text-slate-400 mb-1">
+                  <span>Maïs</span>
+                  <span>18% du périmètre</span>
+                </div>
+                <div class="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
+                  <div class="h-full bg-amber-500" style="width: 18%"></div>
+                </div>
+              </div>
+              <div>
+                <div class="flex justify-between text-xs text-slate-400 mb-1">
+                  <span>Maraîchage</span>
+                  <span>7% du périmètre</span>
+                </div>
+                <div class="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
+                  <div class="h-full bg-teal-500" style="width: 7%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass-panel p-6 rounded-2xl border border-slate-800 flex flex-col justify-between">
+            <h4 class="text-sm font-semibold text-slate-300 mb-2">Efficacité moyenne globale de l'eau</h4>
+            <p class="text-xs text-slate-400 mb-4">Ratio de productivité moyen obtenu par rapport au volume d'irrigation injecté.</p>
+            <div class="h-32 w-full flex items-end justify-between space-x-2">
+              <div class="flex-1 bg-slate-800 rounded-t-lg h-12 flex flex-col justify-end items-center"><span class="text-[9px] mb-1">Jan</span></div>
+              <div class="flex-1 bg-slate-800 rounded-t-lg h-16 flex flex-col justify-end items-center"><span class="text-[9px] mb-1">Feb</span></div>
+              <div class="flex-1 bg-emerald-500/40 rounded-t-lg h-24 flex flex-col justify-end items-center"><span class="text-[9px] mb-1">Mar</span></div>
+              <div class="flex-1 bg-emerald-500/60 rounded-t-lg h-28 flex flex-col justify-end items-center"><span class="text-[9px] mb-1">Apr</span></div>
+              <div class="flex-1 bg-emerald-500 rounded-t-lg h-32 flex flex-col justify-end items-center"><span class="text-[9px] mb-1">May</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add Weather Data Console Tab -->
+      <div [class.hidden]="activeTab() !== 'admin'" class="flex-1 overflow-y-auto p-8 space-y-6 z-10 max-w-xl mx-auto w-full">
+        <div class="glass-panel p-8 rounded-2xl border border-slate-800 space-y-6">
+          <div class="space-y-1">
+            <h3 class="text-lg font-bold text-slate-200">Saisie des Données Météorologiques</h3>
+            <p class="text-xs text-slate-400">Enregistrer les observations climatiques de la station locale pour les calculs de l'évapotranspiration.</p>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div class="space-y-1">
+              <label class="text-xs font-semibold text-slate-400">Date d'observation</label>
+              <input type="date" [(ngModel)]="newWeather.date" class="w-full bg-slate-950 border border-slate-850 rounded-lg p-2.5 text-sm focus:outline-none focus:border-emerald-500">
+            </div>
+            <div class="space-y-1">
+              <label class="text-xs font-semibold text-slate-400">Température (°C)</label>
+              <input type="number" [(ngModel)]="newWeather.temperature" class="w-full bg-slate-950 border border-slate-850 rounded-lg p-2.5 text-sm focus:outline-none focus:border-emerald-500">
+            </div>
+            <div class="space-y-1">
+              <label class="text-xs font-semibold text-slate-400">Humidité (%)</label>
+              <input type="number" [(ngModel)]="newWeather.humidity" class="w-full bg-slate-950 border border-slate-850 rounded-lg p-2.5 text-sm focus:outline-none focus:border-emerald-500">
+            </div>
+            <div class="space-y-1">
+              <label class="text-xs font-semibold text-slate-400">Précipitations (mm)</label>
+              <input type="number" [(ngModel)]="newWeather.precipitation" class="w-full bg-slate-950 border border-slate-850 rounded-lg p-2.5 text-sm focus:outline-none focus:border-emerald-500">
+            </div>
+            <div class="space-y-1">
+              <label class="text-xs font-semibold text-slate-400">Vitesse du vent (m/s)</label>
+              <input type="number" [(ngModel)]="newWeather.wind_speed" class="w-full bg-slate-950 border border-slate-850 rounded-lg p-2.5 text-sm focus:outline-none focus:border-emerald-500">
+            </div>
+            <div class="space-y-1">
+              <label class="text-xs font-semibold text-slate-400">Rayonnement solaire (W/m²)</label>
+              <input type="number" [(ngModel)]="newWeather.solar_radiation" class="w-full bg-slate-950 border border-slate-850 rounded-lg p-2.5 text-sm focus:outline-none focus:border-emerald-500">
+            </div>
+          </div>
+
+          <button (click)="saveWeatherData()" class="w-full py-3 bg-emerald-500 text-slate-950 hover:bg-emerald-400 rounded-lg text-sm font-bold shadow-lg shadow-emerald-500/10 transition-all">Enregistrer l'observation</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Panel: Selected Parcel Details & AI recommendations -->
+    <aside *ngIf="selectedParcelle()" class="w-96 border-l border-slate-800 bg-slate-900/70 overflow-y-auto flex flex-col z-20">
+      
+      <!-- General Infos -->
+      <div class="p-6 border-b border-slate-800 space-y-4">
+        <div class="flex justify-between items-start">
+          <div>
+            <h3 class="text-lg font-bold text-slate-200">{{ selectedParcelle().name }}</h3>
+            <p class="text-xs text-slate-400">{{ selectedParcelle().owner || 'Exploitant local' }}</p>
+          </div>
+          <button (click)="selectedParcelle.set(null)" class="text-slate-500 hover:text-slate-300">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 text-xs">
+          <div class="p-3 bg-slate-950/50 rounded-lg border border-slate-850">
+            <span class="text-slate-500 block mb-0.5">Culture</span>
+            <span class="font-semibold text-slate-300">{{ selectedParcelle().crop_type }}</span>
+          </div>
+          <div class="p-3 bg-slate-950/50 rounded-lg border border-slate-850">
+            <span class="text-slate-500 block mb-0.5">Date de semis</span>
+            <span class="font-semibold text-slate-300">{{ selectedParcelle().planting_date || 'Non spécifiée' }}</span>
+          </div>
+          <div class="p-3 bg-slate-950/50 rounded-lg border border-slate-850 col-span-2">
+            <span class="text-slate-500 block mb-0.5">Rendement déclaré</span>
+            <span class="font-semibold text-slate-300">{{ selectedParcelle().yield || 'N/A' }} t/ha</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trigger Calculations Form (Analyst / Admin role only) -->
+      <div class="p-6 border-b border-slate-800 space-y-3" *ngIf="currentRole() !== 'chercheur'">
+        <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Calculer les Indicateurs</h4>
+        
+        <div class="space-y-3">
+          <div class="flex items-center space-x-2">
+            <input type="date" [(ngModel)]="analysisDate" class="flex-1 bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs focus:outline-none text-slate-300">
+            <button (click)="runNewAnalysis()" [disabled]="isCalculating()" class="py-2 px-4 bg-emerald-500 text-slate-950 rounded-lg text-xs font-bold transition hover:bg-emerald-400 disabled:opacity-50">
+              {{ isCalculating() ? 'Calcul...' : 'Calculer' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Indices Statistics (Latest Analysis) -->
+      <div class="p-6 border-b border-slate-800 space-y-4" *ngIf="analysisHistory().length > 0">
+        <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Derniers Indicateurs Calculés</h4>
+        
+        <!-- NDVI Card -->
+        <div class="p-4 bg-slate-950 rounded-xl border border-slate-850 space-y-3">
+          <div class="flex justify-between items-center">
+            <span class="text-xs font-bold text-slate-400">NDVI (Santé de la plante)</span>
+            <span class="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 text-[10px] font-bold rounded-full">Optimal</span>
+          </div>
+          <div class="grid grid-cols-3 gap-2 text-center">
+            <div class="bg-slate-900/50 p-2 rounded">
+              <span class="text-[10px] text-slate-500 block">Min</span>
+              <span class="text-xs font-semibold text-slate-300">{{ analysisHistory()[analysisHistory().length - 1].ndvi_min }}</span>
+            </div>
+            <div class="bg-emerald-500/10 p-2 rounded border border-emerald-500/20">
+              <span class="text-[10px] text-emerald-400 block font-bold">Moyen</span>
+              <span class="text-sm font-extrabold text-emerald-400">{{ analysisHistory()[analysisHistory().length - 1].ndvi_mean }}</span>
+            </div>
+            <div class="bg-slate-900/50 p-2 rounded">
+              <span class="text-[10px] text-slate-500 block">Max</span>
+              <span class="text-xs font-semibold text-slate-300">{{ analysisHistory()[analysisHistory().length - 1].ndvi_max }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Evapotranspiration Card -->
+        <div class="p-4 bg-slate-950 rounded-xl border border-slate-850 space-y-3">
+          <div class="flex justify-between items-center">
+            <span class="text-xs font-bold text-slate-400">Évapotranspiration (ET)</span>
+            <span class="text-[10px] text-slate-400">Consommation d'eau</span>
+          </div>
+          <div class="grid grid-cols-2 gap-4 text-center">
+            <div class="bg-slate-900/50 p-2 rounded">
+              <span class="text-[10px] text-slate-500 block">ET0 (Réf. Climat)</span>
+              <span class="text-sm font-semibold text-slate-300">{{ analysisHistory()[analysisHistory().length - 1].et0 }} mm/j</span>
+            </div>
+            <div class="bg-blue-500/10 p-2 rounded border border-blue-500/20">
+              <span class="text-[10px] text-blue-400 block font-bold">ETc (Culture)</span>
+              <span class="text-sm font-extrabold text-blue-400">{{ analysisHistory()[analysisHistory().length - 1].etc }} mm/j</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Water Productivity Card -->
+        <div class="p-4 bg-slate-950 rounded-xl border border-slate-850 flex justify-between items-center">
+          <div>
+            <span class="text-xs font-bold text-slate-400 block">Productivité de l'eau</span>
+            <span class="text-[10px] text-slate-500">Rendement / Eau consommée</span>
+          </div>
+          <div class="text-right">
+            <span class="text-base font-extrabold text-blue-400 block">{{ analysisHistory()[analysisHistory().length - 1].water_productivity || '1.34' }} kg/m³</span>
+            <span class="text-[9px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-full font-bold">Haute Efficacité</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Interpretation & Recommendations -->
+      <div class="p-6 bg-gradient-to-b from-slate-900/50 to-slate-950 flex-1 space-y-4" *ngIf="analysisHistory().length > 0">
+        <div class="flex items-center space-x-2">
+          <!-- Gemini Star Logo -->
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-emerald-400 animate-pulse" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h5a1 1 0 01.82 1.573l-7 10A1 1 0 0110 18v-5H5a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd" />
+          </svg>
+          <h4 class="text-xs font-bold text-emerald-400 uppercase tracking-wider">Diagnostic IA Gemini</h4>
+        </div>
+
+        <div class="space-y-4 text-xs">
+          <!-- Comments -->
+          <div class="bg-emerald-950/20 border border-emerald-900/30 p-4 rounded-xl space-y-2">
+            <span class="font-bold text-emerald-300 block">Interprétation de l'état</span>
+            <p class="text-slate-300 leading-relaxed">{{ analysisHistory()[analysisHistory().length - 1].interpretation }}</p>
+          </div>
+
+          <!-- Recommendations -->
+          <div class="bg-blue-950/20 border border-blue-900/30 p-4 rounded-xl space-y-2">
+            <span class="font-bold text-blue-300 block">Préconisations d'irrigation</span>
+            <p class="text-slate-300 whitespace-pre-line leading-relaxed">{{ analysisHistory()[analysisHistory().length - 1].recommendations }}</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- GeoJSON / Shapefile Import Modal -->
+  <div *ngIf="showImportModal()" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div class="glass-panel max-w-md w-full p-6 rounded-2xl border border-slate-800 space-y-6">
+      <div class="flex justify-between items-start">
+        <div>
+          <h3 class="text-lg font-bold text-slate-200">Importer des données spatiales</h3>
+          <p class="text-xs text-slate-400">Sélectionnez un fichier GeoJSON pour charger les limites des parcelles.</p>
+        </div>
+        <button (click)="showImportModal.set(false)" class="text-slate-500 hover:text-slate-300">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- File drag section -->
+      <div class="border-2 border-dashed border-slate-850 hover:border-emerald-500 rounded-xl p-8 text-center cursor-pointer transition relative">
+        <input type="file" (change)="onGeoJsonFileSelected($event)" accept=".geojson,.json" class="absolute inset-0 opacity-0 cursor-pointer">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mx-auto text-slate-500 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V4a2 2 0 012-2h6l2 2h6a2 2 0 012 2v7a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+        </svg>
+        <span class="text-xs font-semibold text-slate-300 block">Glissez ou sélectionnez un fichier GeoJSON</span>
+        <span class="text-[10px] text-slate-500">Extensions autorisées : .geojson, .json</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add manual parcel metadata modal -->
+  <div *ngIf="showAddParcelModal()" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div class="glass-panel max-w-md w-full p-6 rounded-2xl border border-slate-800 space-y-4">
+      <h3 class="text-lg font-bold text-slate-200">Enregistrer la parcelle tracée</h3>
+      
+      <div class="space-y-3">
+        <div class="space-y-1">
+          <label class="text-xs text-slate-400">Nom de la parcelle</label>
+          <input type="text" [(ngModel)]="newParcel.name" placeholder="Ex: Zone Maraîchère Nord" class="w-full bg-slate-950 border border-slate-850 rounded-lg p-2 text-sm text-slate-200 focus:outline-none">
+        </div>
+        <div class="space-y-1">
+          <label class="text-xs text-slate-400">Propriétaire/Exploitant</label>
+          <input type="text" [(ngModel)]="newParcel.owner" placeholder="Ex: Nom de l'exploitant" class="w-full bg-slate-950 border border-slate-850 rounded-lg p-2 text-sm text-slate-200 focus:outline-none">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="space-y-1">
+            <label class="text-xs text-slate-400">Type de culture</label>
+            <select [(ngModel)]="newParcel.crop_type" class="w-full bg-slate-950 border border-slate-850 rounded-lg p-2 text-sm text-slate-200 focus:outline-none">
+              <option value="Riz">Riz</option>
+              <option value="Maïs">Maïs</option>
+              <option value="Maraîchage">Maraîchage</option>
+            </select>
+          </div>
+          <div class="space-y-1">
+            <label class="text-xs text-slate-400">Rendement estimé (t/ha)</label>
+            <input type="number" [(ngModel)]="newParcel.yield" step="0.1" class="w-full bg-slate-950 border border-slate-850 rounded-lg p-2 text-sm text-slate-200 focus:outline-none">
+          </div>
+        </div>
+        <div class="space-y-1">
+          <label class="text-xs text-slate-400">Date de semis</label>
+          <input type="date" [(ngModel)]="newParcel.planting_date" class="w-full bg-slate-950 border border-slate-850 rounded-lg p-2 text-sm text-slate-200 focus:outline-none">
+        </div>
+      </div>
+
+      <div class="flex justify-end space-x-2 pt-2">
+        <button (click)="showAddParcelModal.set(false)" class="px-4 py-2 bg-slate-800 text-slate-300 rounded-lg text-xs transition">Annuler</button>
+        <button (click)="saveManualParcel()" class="px-4 py-2 bg-emerald-500 text-slate-950 font-bold rounded-lg text-xs transition hover:bg-emerald-400">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+</div>

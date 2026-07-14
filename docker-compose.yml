@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  # Base de données PostgreSQL
+  db:
+    image: postgres:15-alpine
+    container_name: geoval-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: geoval
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  # Backend Laravel (PHP + Python)
+  backend:
+    build:
+      context: ./backend-geoval
+      dockerfile: Dockerfile
+    container_name: geoval-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend-geoval:/var/www/html
+      - /var/www/html/vendor
+    depends_on:
+      - db
+    environment:
+      - DB_HOST=db
+      - DB_PASSWORD=secret
+
+  # Frontend Angular
+  frontend:
+    build:
+      context: ./frontend-geoval
+      dockerfile: Dockerfile
+    container_name: geoval-frontend
+    restart: unless-stopped
+    ports:
+      - "80:4200"
+      - "8080:4200"
+    volumes:
+      - ./frontend-geoval:/app
+      - /app/node_modules
+    depends_on:
+      backend:
+        condition: service_started
+
+volumes:
+  pgdata:
