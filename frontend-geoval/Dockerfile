@@ -14,7 +14,7 @@ COPY . .
 
 # Copier le script d'entrypoint
 COPY docker-entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh && chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Exposer le port de développement d'Angular
 EXPOSE 4200
